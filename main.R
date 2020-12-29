@@ -8,9 +8,16 @@ if(require(shiny)){
    n <- 1
 
    # Define the UI
-   ui <- bootstrapPage(
-      numericInput('size', 'Size of wordcloud', n),
-     wordcloud2Output('wordcloud2')
+   ui <- fluidPage(
+      titlePanel("Lorem ipsum"),
+      sidebarLayout(
+        sidebarPanel(
+          numericInput('size', 'Size of wordcloud', n)
+        ),
+        mainPanel(
+          wordcloud2Output('wordcloud2')
+          )
+        )
    )
 
 
