@@ -12,7 +12,10 @@ if(require(shiny)){
       titlePanel("Lorem ipsum"),
       sidebarLayout(
         sidebarPanel(
-          numericInput('size', 'Size of wordcloud', n)
+          numericInput('size', 'Size of wordcloud', n),
+          sliderInput("freq",
+                  "Minimum Frequency:",
+                  min = 1,  max = 50, value = 1),
         ),
         mainPanel(
           wordcloud2Output('wordcloud2')
@@ -24,7 +27,7 @@ if(require(shiny)){
    # Define the server code
    server <- function(input, output) {
       output$wordcloud2 <- renderWordcloud2({
-        wordcloud2(demoFreq, size=input$size)
+        wordcloud2(demoFreq, size=input$freq)
         #wordcloud2(d, size=input$size)
       })
    }
