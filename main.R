@@ -6,16 +6,16 @@ if(require(shiny)){
   library(wordcloud2)
    # Global variables can go here
    n <- 1
-
+   titleApp <- h1("Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu", a(href="http://ceur-ws.org/Vol-1846/", "ceur-ws.org", target="_blank"));
    # Define the UI
    ui <- fluidPage(
-      titlePanel("Lorem ipsum"),
+      titlePanel(title = titleApp, windowTitle = "Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu ceur-ws.org"),
       sidebarLayout(
         sidebarPanel(
-          numericInput('size', 'Size of wordcloud', n),
-          sliderInput("freq",
-                  "Minimum Frequency:",
-                  min = 1,  max = 50, value = 1),
+          h3("Wybierz zakres stron do analizy"),
+          sliderInput("pages", "od",
+                  min = 1,  max = 319, value = c(1, 50)),
+          helpText("Uwaga! Wybranie zbyt dużej liczby stron, może powodowodować powolne działanie aplikacji.")
         ),
         mainPanel(
           wordcloud2Output('wordcloud2')
@@ -27,7 +27,7 @@ if(require(shiny)){
    # Define the server code
    server <- function(input, output) {
       output$wordcloud2 <- renderWordcloud2({
-        wordcloud2(demoFreq, size=input$freq)
+        wordcloud2(demoFreq, size=input$pages[1])
         #wordcloud2(d, size=input$size)
       })
    }
