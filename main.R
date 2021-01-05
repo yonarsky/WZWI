@@ -15,7 +15,7 @@ if(require(shiny)){
           h3("Wybierz zakres stron do analizy"),
           sliderInput("pages", "od", min = 1,  max = 319, value = c(1, 50)),
           helpText("Uwaga! Wybranie zbyt dużej liczby stron, może powodowodować powolne działanie aplikacji."),
-          actionButton("wyslij", "Wyślij"),
+          actionButton("analizuj", "Analizuj"),
           hr(),
           h3("Rozmiar"),
           sliderInput("pages", "od", min = 1,  max = 10, step = 0.1, value = 1),
