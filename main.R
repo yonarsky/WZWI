@@ -38,6 +38,11 @@ if(require(shiny)){
     dokumenty2 <- as.data.frame.list(solr_search(conn = polaczenie, params = list(q="*:*", rows= -1)));
   }
 
+  #pobieranie dokumentu do analizy
+  uri <- "http://www.informatik.uni-hamburg.de/TGI/events/pnse/pnse17/pnse17_proceedings.pdf"
+  download.file(uri,"analizowany_dokument.pdf", method = "internal", mode = "wb")
+  pdf <- readPDF(control = list(text = "-layout"))(elem = list(uri = "analizowany_dokument.pdf"), language = "en", id = "id1")
+
 
    # Global variables can go here
    n <- 1
