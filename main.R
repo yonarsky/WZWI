@@ -37,14 +37,14 @@ if(require(shiny)){
     polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
     dokumenty2 <- as.data.frame.list(solr_search(conn = polaczenie, params = list(q="*:*", rows= -1)));
   }
-  analizaDokumentu <- function () {
+  analizaDokumentu <- function (od, do) {
     #pobieranie dokumentu do analizy
     uri <- "http://www.informatik.uni-hamburg.de/TGI/events/pnse/pnse17/pnse17_proceedings.pdf"
     download.file(uri,"analizowany_dokument.pdf", method = "internal", mode = "wb")
     pdf <- readPDF(control = list(text = "-layout"))(elem = list(uri = "analizowany_dokument.pdf"), language = "en", id = "id1")
 
     #wczytywanie analizowanego dokumentu
-    tekst <- pdf_text(pdf="analizowany_dokument.pdf")[strony$input[1]:strony$input[2]]
+    tekst <- pdf_text(pdf="analizowany_dokument.pdf")[od:do]
     tekst2 <- str_replace_all(tekst, "[\r\n]", " ")
     tekst3 <- str_squish(tekst2)
 
@@ -99,6 +99,7 @@ if(require(shiny)){
    # Define the server code
    server <- function(input, output) {
      observeEvent(input$analizuj, {
+       analizaDokumentu(input$strony[1], input$strony[2])
       output$wordcloud2 <- renderWordcloud2({
         wordcloud2(demoFreq, size=input$rozmiar)
     })
