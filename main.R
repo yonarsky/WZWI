@@ -51,14 +51,25 @@ if(require(shiny)){
     wyslijSolr(tekst3);
     #przygotowanie tekstu do analizy
     dokumenty2 <- pobierzSolr();
-    dokumenty <- Corpus(VectorSource(stri_enc_toutf8(dokumenty2$content)));
-    dokumenty <- tm_map(dokumenty, removePunctuation);
-    dokumenty <- tm_map(dokumenty, removeNumbers);
-    dokumenty <- tm_map(dokumenty, content_transformer(tolower));
-    dokumenty <- tm_map(dokumenty, removeWords, c(stopwords("SMART"), "thy", "thou", "thee", "the", "and", "but"));
+    dokumenty <- Corpus(VectorSource(stri_enc_toutf8(dokumenty2$content)))
+    dokumenty <- tm_map(dokumenty, removePunctuation)
+    dokumenty <- tm_map(dokumenty, removeNumbers)
+    dokumenty <- tm_map(dokumenty, content_transformer(tolower))
+    dokumenty <- tm_map(dokumenty, removeWords, c(stopwords("SMART"), "thy", "thou", "thee", "the", "and", "but"))
 
-    usun.znaki <- function (x) gsub("[–„”’⊗‡∪≤∃�“•∈→−δ∩∗∅—∀∼�π_⊂σ�𝑎⊆𝑐𝑡∧𝑏𝑠≈Ωµτ↓φ⇔∞≥⇒◦∆𝑒𝑚↔⇐≺𝑑⇤‘α×𝑓ø¬⊥]", "", x);
-    dokumenty <- tm_map(dokumenty, usun.znaki);
+    usun.znaki <- function (x) gsub("[–„”’⊗‡∪≤∃�“•∈→−δ∩∗∅—∀∼�π_⊂σ�𝑎⊆𝑐𝑡∧𝑏𝑠≈Ωµτ↓φ⇔∞≥⇒◦∆𝑒𝑚↔⇐≺𝑑⇤‘α×𝑓ø¬⊥]", "", x)
+    dokumenty <- tm_map(dokumenty, usun.znaki)
+
+    #lematyzacja
+    for (d in 1:length(dokumenty)) {
+      dokumenty[[d]]$content <- lemmatize_strings(dokumenty[[d]]$content)
+      dokumenty[[d]]$content <- stri_enc_toutf8(dokumenty[[d]]$content)
+    }
+
+    tdm <- TermDocumentMatrix(dokumenty)
+    m <- as.matrix(tdm)
+    v <- sort(rowSums(m), decreasing = TRUE)
+    d <- data.frame(words = names(v), freq = v)
   }
    # Global variables can go here
    n <- 1
