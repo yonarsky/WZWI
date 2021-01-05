@@ -70,6 +70,7 @@ if(require(shiny)){
     m <- as.matrix(tdm)
     v <- sort(rowSums(m), decreasing = TRUE)
     d <- data.frame(words = names(v), freq = v)
+    return(d)
   }
    # Global variables can go here
    n <- 1
@@ -79,15 +80,12 @@ if(require(shiny)){
       titlePanel(title = titleApp, windowTitle = "Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu ceur-ws.org"),
       sidebarLayout(
         sidebarPanel(
-          h3("Wybierz zakres stron do analizy"),
-          sliderInput("strony", "od", min = 1,  max = 319, value = c(1, 50)),
+          sliderInput("strony", "Wybierz zakres stron do analizy", min = 1,  max = 319, value = c(1, 50)),
           helpText("Uwaga! Wybranie zbyt dużej liczby stron, może powodowodować powolne działanie aplikacji."),
           actionButton("analizuj", "Analizuj"),
           hr(),
-          h3("Rozmiar"),
-          sliderInput("rozmiar", "od", min = 1,  max = 10, step = 0.1, value = 1),
-          h3("Liczba słów [%]"),
-          sliderInput("lSlow", "od", min = 1,  max = 100, value = 50, post = " %"),
+          sliderInput("rozmiar", "Rozmiar", min = 1,  max = 10, step = 0.1, value = 1),
+          sliderInput("lSlow", "Liczba slów", min = 1,  max = 100, value = 50, post = " %"),
         ),
         mainPanel(
           wordcloud2Output('wordcloud2')
@@ -99,9 +97,9 @@ if(require(shiny)){
    # Define the server code
    server <- function(input, output) {
      observeEvent(input$analizuj, {
-       analizaDokumentu(input$strony[1], input$strony[2])
+       d <- analizaDokumentu(input$strony[1], input$strony[2])
       output$wordcloud2 <- renderWordcloud2({
-        wordcloud2(demoFreq, size=input$rozmiar)
+        wordcloud2(d, size=input$rozmiar)
     })
         #wordcloud2(d, size=input$size)
       })
