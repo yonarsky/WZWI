@@ -14,22 +14,29 @@ if(require(shiny)){
   library(solrium)
   library(textstem)
 
-wyslijSolr <- function (dane) {
-  polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
-  wielkosc <- length(dane)
-  data1 <- matrix(nrow = wielkosc, ncol = 2)
+  wyslijSolr <- function (dane) {
+    #wysyłanie wiadomości do Solr
+    polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
+    wielkosc <- length(dane)
+    data1 <- matrix(nrow = wielkosc, ncol = 2)
 
-  colnames(data1) <- c("id","content")
+    colnames(data1) <- c("id","content")
 
-  counter <- 1
-  for (val in dane) {
-    data1[counter,1] <- counter
-    data1[counter,2] <- val
-    counter <- counter + 1
+    counter <- 1
+    for (val in dane) {
+      data1[counter,1] <- counter
+      data1[counter,2] <- val
+      counter <- counter + 1
+    }
+    dokumenty <- data.frame(data1)
+    solrium::add(x = dokumenty, conn = polaczenie, name = 'pnse17');
   }
-  dokumenty <- data.frame(data1)
-  solrium::add(x = dokumenty, conn = polaczenie, name = 'pnse17');
-}
+
+  pobierzSolr <- function () {
+    #pobieranie wiadomości z Solr
+    polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
+    dokumenty2 <- as.data.frame.list(solr_search(conn = polaczenie, params = list(q="*:*", rows= -1)));
+  }
 
 
    # Global variables can go here
