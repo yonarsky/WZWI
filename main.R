@@ -48,7 +48,17 @@ if(require(shiny)){
     tekst2 <- str_replace_all(tekst, "[\r\n]", " ")
     tekst3 <- str_squish(tekst2)
 
+    wyslijSolr(tekst3);
+    #przygotowanie tekstu do analizy
+    dokumenty2 <- pobierzSolr();
+    dokumenty <- Corpus(VectorSource(stri_enc_toutf8(dokumenty2$content)));
+    dokumenty <- tm_map(dokumenty, removePunctuation);
+    dokumenty <- tm_map(dokumenty, removeNumbers);
+    dokumenty <- tm_map(dokumenty, content_transformer(tolower));
+    dokumenty <- tm_map(dokumenty, removeWords, c(stopwords("SMART"), "thy", "thou", "thee", "the", "and", "but"));
 
+    usun.znaki <- function (x) gsub("[–„”’⊗‡∪≤∃�“•∈→−δ∩∗∅—∀∼�π_⊂σ�𝑎⊆𝑐𝑡∧𝑏𝑠≈Ωµτ↓φ⇔∞≥⇒◦∆𝑒𝑚↔⇐≺𝑑⇤‘α×𝑓ø¬⊥]", "", x);
+    dokumenty <- tm_map(dokumenty, usun.znaki);
   }
    # Global variables can go here
    n <- 1
