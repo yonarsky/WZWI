@@ -37,13 +37,19 @@ if(require(shiny)){
     polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
     dokumenty2 <- as.data.frame.list(solr_search(conn = polaczenie, params = list(q="*:*", rows= -1)));
   }
+  analizaDokumentu <- function () {
+    #pobieranie dokumentu do analizy
+    uri <- "http://www.informatik.uni-hamburg.de/TGI/events/pnse/pnse17/pnse17_proceedings.pdf"
+    download.file(uri,"analizowany_dokument.pdf", method = "internal", mode = "wb")
+    pdf <- readPDF(control = list(text = "-layout"))(elem = list(uri = "analizowany_dokument.pdf"), language = "en", id = "id1")
 
-  #pobieranie dokumentu do analizy
-  uri <- "http://www.informatik.uni-hamburg.de/TGI/events/pnse/pnse17/pnse17_proceedings.pdf"
-  download.file(uri,"analizowany_dokument.pdf", method = "internal", mode = "wb")
-  pdf <- readPDF(control = list(text = "-layout"))(elem = list(uri = "analizowany_dokument.pdf"), language = "en", id = "id1")
+    #wczytywanie analizowanego dokumentu
+    tekst <- pdf_text(pdf="analizowany_dokument.pdf")[strony$input[1]:strony$input[2]]
+    tekst2 <- str_replace_all(tekst, "[\r\n]", " ")
+    tekst3 <- str_squish(tekst2)
 
 
+  }
    # Global variables can go here
    n <- 1
    titleApp <- h1("Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu", a(href="http://ceur-ws.org/Vol-1846/", "ceur-ws.org", target="_blank"));
