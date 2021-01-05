@@ -4,6 +4,15 @@
 
 if(require(shiny)){
   library(wordcloud2)
+  library(pdftools)
+  library(stringr)
+  library(tidyRSS)
+  library(tm)
+  library(httr)
+  library(XML)
+  library(stringi)
+  library(solrium)
+  library(textstem)
    # Global variables can go here
    n <- 1
    titleApp <- h1("Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu", a(href="http://ceur-ws.org/Vol-1846/", "ceur-ws.org", target="_blank"));
