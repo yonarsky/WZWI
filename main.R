@@ -13,10 +13,14 @@ if(require(shiny)){
   library(stringi)
   library(solrium)
   library(textstem)
+  library(curl)
 
   wyslijSolr <- function (dane) {
     #wysyłanie wiadomości do Solr
     polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
+
+    solrium::delete_by_query(conn = polaczenie, name = 'pnse17', query = '*:*')
+
     wielkosc <- length(dane)
     data1 <- matrix(nrow = wielkosc, ncol = 2)
 
@@ -29,7 +33,7 @@ if(require(shiny)){
       counter <- counter + 1
     }
     dokumenty <- data.frame(data1)
-    solrium::add(x = dokumenty, conn = polaczenie, name = 'pnse17');
+    solrium::add(x = dokumenty, conn = polaczenie, name = 'pnse17', overwrite = TRUE)
   }
 
   pobierzSolr <- function () {
@@ -44,7 +48,7 @@ if(require(shiny)){
     pdf <- readPDF(control = list(text = "-layout"))(elem = list(uri = "analizowany_dokument.pdf"), language = "en", id = "id1")
 
     #wczytywanie analizowanego dokumentu
-    tekst <- pdf_text(pdf="analizowany_dokument.pdf")[od:do]
+    tekst <- pdf_text("analizowany_dokument.pdf")[od:do]
     tekst2 <- str_replace_all(tekst, "[\r\n]", " ")
     tekst3 <- str_squish(tekst2)
 
@@ -61,7 +65,7 @@ if(require(shiny)){
     dokumenty <- tm_map(dokumenty, usun.znaki)
 
     #lematyzacja
-    for (d in 1:length(dokumenty)) {
+    for (d in seq_along(dokumenty)) {
       dokumenty[[d]]$content <- lemmatize_strings(dokumenty[[d]]$content)
       dokumenty[[d]]$content <- stri_enc_toutf8(dokumenty[[d]]$content)
     }
@@ -72,10 +76,9 @@ if(require(shiny)){
     d <- data.frame(words = names(v), freq = v)
     return(d)
   }
-   # Global variables can go here
-   n <- 1
+
    titleApp <- h1("Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu", a(href="http://ceur-ws.org/Vol-1846/", "ceur-ws.org", target="_blank"));
-   # Define the UI
+
    ui <- fluidPage(
       titlePanel(title = titleApp, windowTitle = "Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu ceur-ws.org"),
       sidebarLayout(
@@ -84,8 +87,7 @@ if(require(shiny)){
           helpText("Uwaga! Wybranie zbyt dużej liczby stron, może powodowodować powolne działanie aplikacji."),
           actionButton("analizuj", "Analizuj"),
           hr(),
-          sliderInput("rozmiar", "Rozmiar", min = 1,  max = 10, step = 0.1, value = 1),
-          sliderInput("lSlow", "Liczba slów", min = 1,  max = 100, value = 50, post = " %"),
+          sliderInput("rozmiar", "Rozmiar", min = 1,  max = 5, step = 0.05, value = 1),
         ),
         mainPanel(
           wordcloud2Output('wordcloud2')
@@ -93,19 +95,15 @@ if(require(shiny)){
         )
    )
 
-
-   # Define the server code
    server <- function(input, output) {
      observeEvent(input$analizuj, {
-       d <- analizaDokumentu(input$strony[1], input$strony[2])
+       d <- as.data.frame.list(analizaDokumentu(input$strony[1], input$strony[2]))
       output$wordcloud2 <- renderWordcloud2({
         wordcloud2(d, size=input$rozmiar)
     })
-        #wordcloud2(d, size=input$size)
       })
    }
-   # Return a Shiny app object
-   # Sys.setlocale("LC_CTYPE","chs") #if you use Chinese character
+
    ## Do not Run!
    shinyApp(ui = ui, server = server)
    }
