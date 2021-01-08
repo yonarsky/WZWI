@@ -13,7 +13,6 @@ if(require(shiny)){
   library(stringi)
   library(solrium)
   library(textstem)
-  library(curl)
 
   wyslijSolr <- function (dane) {
     #wysyłanie wiadomości do Solr
@@ -87,7 +86,7 @@ if(require(shiny)){
           helpText("Uwaga! Wybranie zbyt dużej liczby stron, może powodowodować powolne działanie aplikacji."),
           actionButton("analizuj", "Analizuj"),
           hr(),
-          sliderInput("rozmiar", "Rozmiar", min = 1,  max = 5, step = 0.05, value = 1),
+          sliderInput("rozmiar", "Rozmiar", min = 1,  max = 5, step = 0.05, value = 1)
         ),
         mainPanel(
           wordcloud2Output('wordcloud2')
@@ -99,7 +98,7 @@ if(require(shiny)){
      observeEvent(input$analizuj, {
        d <- as.data.frame.list(analizaDokumentu(input$strony[1], input$strony[2]))
       output$wordcloud2 <- renderWordcloud2({
-        wordcloud2(d, size=input$rozmiar)
+        wordcloud2(d, size = input$rozmiar, backgroundColor = input$tlo)
     })
       })
    }
