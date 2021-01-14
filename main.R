@@ -1,4 +1,4 @@
-# Title     : Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu ceur-ws.org
+# Title     : Web application in R for data acquisition and analysis from scientific articles from International Workshop on Petri Nets and Software Engineering 2017. (http://ceur-ws.org/Vol-1846/)
 # Created by: yonarsky
 # Created on: 20.12.2020
 
@@ -14,79 +14,78 @@ if(require(shiny)){
   library(solrium)
   library(textstem)
 
-  wyslijSolr <- function (dane) {
-    #wysyłanie wiadomości do Solr
-    polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
+  sendSolr <- function (data) {
+    #send messages to Apache Solr
+    connection <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
 
-    solrium::delete_by_query(conn = polaczenie, name = 'pnse17', query = '*:*')
+    solrium::delete_by_query(conn = connection, name = 'pnse17', query = '*:*')
 
-    wielkosc <- length(dane)
-    data1 <- matrix(nrow = wielkosc, ncol = 2)
+    len <- length(data)
+    data1 <- matrix(nrow = len, ncol = 2)
 
     colnames(data1) <- c("id","content")
 
     counter <- 1
-    for (val in dane) {
+    for (val in data) {
       data1[counter,1] <- counter
       data1[counter,2] <- val
       counter <- counter + 1
     }
-    dokumenty <- data.frame(data1)
-    solrium::add(x = dokumenty, conn = polaczenie, name = 'pnse17', overwrite = TRUE)
+    documents <- data.frame(data1)
+    solrium::add(x = documents, conn = connection, name = 'pnse17', overwrite = TRUE)
   }
 
-  pobierzSolr <- function () {
-    #pobieranie wiadomości z Solr
-    polaczenie <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
-    dokumenty2 <- as.data.frame.list(solr_search(conn = polaczenie, params = list(q="*:*", rows= -1)));
+  getSolr <- function () {
+    #dwonload messages from Apache Solr
+    connection <- SolrClient$new(host = "127.0.0.1", port = 8983, path = "/solr/pnse17/select")
+    documents2 <- as.data.frame.list(solr_search(conn = connection, params = list(q="*:*", rows= -1)));
   }
-  analizaDokumentu <- function (od, do) {
-    #pobieranie dokumentu do analizy
+  docAnalyze <- function (od, do) {
+    #download pdf document
     uri <- "http://www.informatik.uni-hamburg.de/TGI/events/pnse/pnse17/pnse17_proceedings.pdf"
-    download.file(uri,"analizowany_dokument.pdf", method = "internal", mode = "wb")
-    pdf <- readPDF(control = list(text = "-layout"))(elem = list(uri = "analizowany_dokument.pdf"), language = "en", id = "id1")
+    download.file(uri,"document_pdf.pdf", method = "internal", mode = "wb")
+    pdf <- readPDF(control = list(text = "-layout"))(elem = list(uri = "document_pdf.pdf"), language = "en", id = "id1")
 
     #wczytywanie analizowanego dokumentu
-    tekst <- pdf_text("analizowany_dokument.pdf")[od:do]
-    tekst2 <- str_replace_all(tekst, "[\r\n]", " ")
-    tekst3 <- str_squish(tekst2)
+    text <- pdf_text("document_pdf.pdf")[od:do]
+    text2 <- str_replace_all(text, "[\r\n]", " ")
+    text3 <- str_squish(text2)
 
-    wyslijSolr(tekst3);
+    sendSolr(text3);
     #przygotowanie tekstu do analizy
-    dokumenty2 <- pobierzSolr();
-    dokumenty <- Corpus(VectorSource(stri_enc_toutf8(dokumenty2$content)))
-    dokumenty <- tm_map(dokumenty, removePunctuation)
-    dokumenty <- tm_map(dokumenty, removeNumbers)
-    dokumenty <- tm_map(dokumenty, content_transformer(tolower))
-    dokumenty <- tm_map(dokumenty, removeWords, c(stopwords("SMART"), "thy", "thou", "thee", "the", "and", "but"))
+    documents2 <- getSolr();
+    documents <- Corpus(VectorSource(stri_enc_toutf8(documents2$content)))
+    documents <- tm_map(documents, removePunctuation)
+    documents <- tm_map(documents, removeNumbers)
+    documents <- tm_map(documents, content_transformer(tolower))
+    documents <- tm_map(documents, removeWords, c(stopwords("SMART"), "thy", "thou", "thee", "the", "and", "but"))
 
-    usun.znaki <- function (x) gsub("[–„”’⊗‡∪≤∃�“•∈→−δ∩∗∅—∀∼�π_⊂σ�𝑎⊆𝑐𝑡∧𝑏𝑠≈Ωµτ↓φ⇔∞≥⇒◦∆𝑒𝑚↔⇐≺𝑑⇤‘α×𝑓ø¬⊥]", "", x)
-    dokumenty <- tm_map(dokumenty, usun.znaki)
+    removeChars <- function (x) gsub("[–„”’⊗‡∪≤∃�“•∈→−δ∩∗∅—∀∼�π_⊂σ�𝑎⊆𝑐𝑡∧𝑏𝑠≈Ωµτ↓φ⇔∞≥⇒◦∆𝑒𝑚↔⇐≺𝑑⇤‘α×𝑓ø¬⊥]", "", x)
+    documents <- tm_map(documents, removeChars)
 
-    #lematyzacja
-    for (d in seq_along(dokumenty)) {
-      dokumenty[[d]]$content <- lemmatize_strings(dokumenty[[d]]$content)
-      dokumenty[[d]]$content <- stri_enc_toutf8(dokumenty[[d]]$content)
+    #lemmatisation
+    for (d in seq_along(documents)) {
+      documents[[d]]$content <- lemmatize_strings(documents[[d]]$content)
+      documents[[d]]$content <- stri_enc_toutf8(documents[[d]]$content)
     }
 
-    tdm <- TermDocumentMatrix(dokumenty)
+    tdm <- TermDocumentMatrix(documents)
     m <- as.matrix(tdm)
     v <- sort(rowSums(m), decreasing = TRUE)
     d <- data.frame(words = names(v), freq = v)
     return(d)
   }
 
-   titleApp <- h1("Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu", a(href="http://ceur-ws.org/Vol-1846/", "ceur-ws.org", target="_blank"));
+   titleApp <- h1("Web application in R for data acquisition and analysis from scientific articles from International Workshop on Petri Nets and Software Engineering 2017 ", a(href="http://ceur-ws.org/Vol-1846/", "(ceur-ws.org)", target="_blank"));
 
    ui <- fluidPage(
-      titlePanel(title = titleApp, windowTitle = "Aplikacja webowa do akwizycji i analizy danych z artykułów z konferencji Petri Nets and Software Engineering 2017 umieszczonych na portalu ceur-ws.org"),
+      titlePanel(title = titleApp, windowTitle = "Web application in R for data acquisition and analysis from scientific articles from International Workshop on Petri Nets and Software Engineering 2017."),
       sidebarLayout(
         sidebarPanel(
-          sliderInput("strony", "Wybierz zakres stron do analizy", min = 1,  max = 319, value = c(1, 50)),
-          helpText("Uwaga! Wybranie zbyt dużej liczby stron, może powodowodować powolne działanie aplikacji."),
-          actionButton("analizuj", "Analizuj"),
+          sliderInput("pages", "Numbers of pages", min = 1,  max = 319, value = c(1, 50)),
+          actionButton("analyze", "Analyze"),
           hr(),
-          sliderInput("rozmiar", "Rozmiar", min = 1,  max = 5, step = 0.05, value = 1)
+          sliderInput("size", "Size", min = 1,  max = 5, step = 0.05, value = 1)
         ),
         mainPanel(
           wordcloud2Output('wordcloud2')
@@ -95,10 +94,10 @@ if(require(shiny)){
    )
 
    server <- function(input, output) {
-     observeEvent(input$analizuj, {
-       d <- as.data.frame.list(analizaDokumentu(input$strony[1], input$strony[2]))
+     observeEvent(input$analyze, {
+       d <- as.data.frame.list(docAnalyze(input$pages[1], input$pages[2]))
       output$wordcloud2 <- renderWordcloud2({
-        wordcloud2(d, size = input$rozmiar, backgroundColor = input$tlo)
+        wordcloud2(d, size = input$size)
     })
       })
    }
