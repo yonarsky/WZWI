@@ -103,5 +103,6 @@ if(require(shiny)){
    }
 
    ## Do not Run!
+   ## Do Run!
    shinyApp(ui = ui, server = server)
    }
